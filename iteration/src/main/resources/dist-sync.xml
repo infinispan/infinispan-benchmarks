@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:7.2 http://www.infinispan.org/schemas/infinispan-config-7.2.xsd"
+        xmlns="urn:infinispan:config:7.0">
+
+    <jgroups>
+        <stack-file name="jgroupsStack" path="jgroups-stack-tcp.xml"/>
+    </jgroups>
+
+    <cache-container name="default" default-cache="testCache">
+        <transport stack="jgroupsStack" lock-timeout="600000" cluster="default" />
+        <jmx duplicate-domains="true">
+            <property name="enabled">true</property>
+        </jmx>
+        <serialization>
+            <advanced-externalizer class="org.infinispan.jmhbenchmarks.KeySequenceGenerator$ValueWrapperSerializer"/>
+        </serialization>
+
+        <distributed-cache name="testCache" mode="SYNC">
+            <state-transfer enabled="false" />
+        </distributed-cache>
+    </cache-container>
+</infinispan>
