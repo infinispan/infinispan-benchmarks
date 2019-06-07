@@ -1,31 +1,23 @@
 package org.infinispan.jmhbenchmarks;
 
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.infinispan.Cache;
-import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
-import org.infinispan.marshall.core.MarshalledEntry;
+import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
+import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.SegmentedAdvancedLoadWriteStore;
-import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
+import org.infinispan.util.concurrent.CompletionStages;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Group;
-import org.openjdk.jmh.annotations.GroupThreads;
 import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.infra.Blackhole;
 
 import io.reactivex.Flowable;
@@ -41,9 +33,9 @@ import io.reactivex.Flowable;
 		"-XX:LargePageSizeInBytes=2m"})
 @BenchmarkMode(Mode.Throughput)
 public class JMHBenchmarks {
-	private final static MarshalledEntry newEntry(StreamingMarshaller marshaller, KeySequenceGenerator generator) {
+	private static MarshallableEntry newEntry(StreamingMarshaller marshaller, KeySequenceGenerator generator) {
 		InternalCacheEntry ice = TestInternalCacheEntryFactory.create(generator.getNextKey(), generator.getNextValue());
-		return TestingUtil.marshalledEntry(ice, marshaller);
+		return MarshalledEntryUtil.create(ice, marshaller);
 	}
 
 	@Benchmark
@@ -54,12 +46,12 @@ public class JMHBenchmarks {
 	@Benchmark
 	public void testWriteBatch(InfinispanHolder holder, KeySequenceGenerator generator) {
 		int batchSize = holder.getBatchSize();
-		Set<MarshalledEntry> batch = new HashSet<>(batchSize);
+		Set<MarshallableEntry> batch = new HashSet<>(batchSize);
 		StreamingMarshaller marshaller = holder.getMarshaller();
 		for (int i = 0; i < holder.getBatchSize(); ++i) {
 			batch.add(newEntry(marshaller, generator));
 		}
-		holder.getStore().writeBatch(batch);
+		CompletionStages.join(holder.getStore().bulkUpdate(Flowable.fromIterable(batch)));
 	}
 
 	@Benchmark

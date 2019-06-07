@@ -14,8 +14,9 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.MarshalledEntry;
+import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
+import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
 import org.openjdk.jmh.annotations.Param;
@@ -60,11 +61,11 @@ public class InfinispanHolder {
 		keyPartitioner = TestingUtil.extractComponent(cache, KeyPartitioner.class);
 
 		int writeBatch = 10000;
-		Set<MarshalledEntry> entries = new HashSet<>();
+		Set<MarshallableEntry> entries = new HashSet<>();
 		// Now we actually populate the cache
 		for (int i = 1; i < generator.distinctEntries + 1; ++i) {
 			InternalCacheEntry ice = TestInternalCacheEntryFactory.create(generator.getNextKey(), generator.getNextValue());
-			MarshalledEntry entry = TestingUtil.marshalledEntry(ice, marshaller);
+			MarshallableEntry entry = MarshalledEntryUtil.create(ice, marshaller);
 			entries.add(entry);
 			if (i % writeBatch == 0) {
 				store.writeBatch(entries);
