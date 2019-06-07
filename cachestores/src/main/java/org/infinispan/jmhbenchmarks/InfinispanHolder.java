@@ -19,11 +19,14 @@ import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
+import org.infinispan.util.concurrent.CompletionStages;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
+
+import io.reactivex.Flowable;
 
 @State(Scope.Benchmark)
 public class InfinispanHolder {
@@ -51,7 +54,7 @@ public class InfinispanHolder {
 				.segmented(segmented)
 				// Make sure runs between don't leak into each other
 				.purgeOnStartup(true);
-		cacheManager = new DefaultCacheManager(new GlobalConfigurationBuilder().nonClusteredDefault().build(),
+		cacheManager = new DefaultCacheManager(new GlobalConfigurationBuilder().nonClusteredDefault().defaultCacheName("default").build(),
 				builder.build());
 		cache = cacheManager.getCache();
 
@@ -68,12 +71,12 @@ public class InfinispanHolder {
 			MarshallableEntry entry = MarshalledEntryUtil.create(ice, marshaller);
 			entries.add(entry);
 			if (i % writeBatch == 0) {
-				store.writeBatch(entries);
+				CompletionStages.join(store.bulkUpdate(Flowable.fromIterable(entries)));
 				entries.clear();
 			}
 		}
 		if (!entries.isEmpty()) {
-			store.writeBatch(entries);
+			CompletionStages.join(store.bulkUpdate(Flowable.fromIterable(entries)));
 		}
 	}
 

@@ -83,13 +83,13 @@ public class JMHBenchmarks {
 
 	@Benchmark
 	public void testPublishEntriesTrue(Blackhole blackhole, InfinispanHolder holder) {
-		Flowable.fromPublisher(holder.getStore().publishEntries(f -> true, true, true))
+		Flowable.fromPublisher(holder.getStore().entryPublisher(f -> true, true, true))
 				.blockingForEach(blackhole::consume);
 	}
 
 	@Benchmark
 	public void testPublishEntriesFalse(Blackhole blackhole, InfinispanHolder holder) {
-		Flowable.fromPublisher(holder.getStore().publishEntries(f -> false, true, true))
+		Flowable.fromPublisher(holder.getStore().entryPublisher(f -> false, true, true))
 				.blockingForEach(blackhole::consume);
 	}
 
@@ -114,7 +114,7 @@ public class JMHBenchmarks {
 		IntSet intSet = holder.getHalfSegments();
 		KeyPartitioner keyPartitioner = holder.getKeyPartitioner();
 		if (alws instanceof SegmentedAdvancedLoadWriteStore) {
-			Flowable.fromPublisher(((SegmentedAdvancedLoadWriteStore) alws).publishEntries(intSet, predicate, true, true))
+			Flowable.fromPublisher(((SegmentedAdvancedLoadWriteStore) alws).entryPublisher(intSet, predicate, true, true))
 					.blockingForEach(blackhole::consume);
 		} else {
 			Predicate<Object> segmentFilter = e -> intSet.contains(keyPartitioner.getSegment(e));
