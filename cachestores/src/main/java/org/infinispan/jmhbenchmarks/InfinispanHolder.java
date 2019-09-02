@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.RangeSet;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -40,7 +40,7 @@ public class InfinispanHolder {
 	@Param("100")
 	private int batchSize;
 
-	private StreamingMarshaller marshaller;
+	private Marshaller marshaller;
 	private EmbeddedCacheManager cacheManager;
 	private Cache cache;
 	private AdvancedLoadWriteStore store;
@@ -58,7 +58,7 @@ public class InfinispanHolder {
 				builder.build());
 		cache = cacheManager.getCache();
 
-		marshaller = TestingUtil.extractComponent(cache, StreamingMarshaller.class);
+		marshaller = TestingUtil.extractPersistenceMarshaller(cacheManager);
 		store = (AdvancedLoadWriteStore) TestingUtil.getFirstLoader(cache);
 		halfSegments = new RangeSet(cache.getCacheConfiguration().clustering().hash().numSegments() / 2);
 		keyPartitioner = TestingUtil.extractComponent(cache, KeyPartitioner.class);
@@ -80,7 +80,7 @@ public class InfinispanHolder {
 		}
 	}
 
-	public StreamingMarshaller getMarshaller() {
+	public Marshaller getMarshaller() {
 		return marshaller;
 	}
 

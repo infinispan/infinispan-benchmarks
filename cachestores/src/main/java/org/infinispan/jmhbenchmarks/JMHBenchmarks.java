@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
@@ -33,7 +33,7 @@ import io.reactivex.Flowable;
 		"-XX:LargePageSizeInBytes=2m"})
 @BenchmarkMode(Mode.Throughput)
 public class JMHBenchmarks {
-	private static MarshallableEntry newEntry(StreamingMarshaller marshaller, KeySequenceGenerator generator) {
+	private static MarshallableEntry newEntry(Marshaller marshaller, KeySequenceGenerator generator) {
 		InternalCacheEntry ice = TestInternalCacheEntryFactory.create(generator.getNextKey(), generator.getNextValue());
 		return MarshalledEntryUtil.create(ice, marshaller);
 	}
@@ -47,7 +47,7 @@ public class JMHBenchmarks {
 	public void testWriteBatch(InfinispanHolder holder, KeySequenceGenerator generator) {
 		int batchSize = holder.getBatchSize();
 		Set<MarshallableEntry> batch = new HashSet<>(batchSize);
-		StreamingMarshaller marshaller = holder.getMarshaller();
+		Marshaller marshaller = holder.getMarshaller();
 		for (int i = 0; i < holder.getBatchSize(); ++i) {
 			batch.add(newEntry(marshaller, generator));
 		}
