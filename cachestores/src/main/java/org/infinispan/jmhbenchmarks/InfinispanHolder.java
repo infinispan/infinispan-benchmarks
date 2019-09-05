@@ -103,5 +103,6 @@ public class InfinispanHolder {
 	@TearDown
 	public void shutdownState() {
 		cache.stop();
+		storeType.tearDown();
 	}
 }
