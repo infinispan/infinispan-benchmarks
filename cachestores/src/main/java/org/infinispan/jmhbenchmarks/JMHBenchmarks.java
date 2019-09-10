@@ -56,7 +56,7 @@ public class JMHBenchmarks {
 
 	@Benchmark
 	public Object testLoad(InfinispanHolder holder, KeySequenceGenerator generator) {
-		return holder.getStore().load(generator.getNextKey());
+		return holder.getStore().loadEntry(generator.getNextKey());
 	}
 
 	@Benchmark
@@ -118,7 +118,7 @@ public class JMHBenchmarks {
 					.blockingForEach(blackhole::consume);
 		} else {
 			Predicate<Object> segmentFilter = e -> intSet.contains(keyPartitioner.getSegment(e));
-			Flowable.fromPublisher(alws.publishEntries(segmentFilter.and(predicate), true, true))
+			Flowable.fromPublisher(alws.entryPublisher(segmentFilter.and(predicate), true, true))
 					.blockingForEach(blackhole::consume);
 		}
 	}
