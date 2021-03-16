@@ -1,14 +1,14 @@
 package org.infinispan.jmhbenchmarks;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.util.IntSet;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.persistence.spi.NonBlockingStore;
 import org.infinispan.persistence.support.SegmentPublisherWrapper;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
 import org.infinispan.util.concurrent.CompletionStages;
@@ -17,6 +17,7 @@ import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.infra.Blackhole;
+import org.reactivestreams.Publisher;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.functions.Function;
@@ -42,15 +43,15 @@ public class JMHBenchmarks {
 
 	@Benchmark
 	public void testWriteBatch(InfinispanHolder holder, KeySequenceGenerator generator) {
-		int batchSize = holder.getBatchSize();
-		Set<MarshallableEntry> batch = new HashSet<>(batchSize);
-		Marshaller marshaller = holder.getMarshaller();
-		for (int i = 0; i < holder.getBatchSize(); ++i) {
-			batch.add(newEntry(marshaller, generator));
-		}
-		CompletionStages.join(holder.getStore().batch(holder.getAllSegments().size(), Flowable.empty(),
-				Flowable.fromIterable(batch).groupBy(innerIce ->
-						holder.getKeyPartitioner().getSegment(innerIce.getKey())).map(SegmentPublisherWrapper::wrap)));
+		Flowable<MarshallableEntry<?, ?>> entryFlowable = (Flowable)
+				Flowable.fromSupplier(() -> newEntry(holder.getMarshaller(), generator))
+						.take(holder.getBatchSize());
+
+		Publisher<NonBlockingStore.SegmentedPublisher<MarshallableEntry<?, ?>>> writePublisher = entryFlowable
+				.groupBy(innerIce -> holder.getKeyPartitioner().getSegment(innerIce.getKey()))
+				.map(SegmentPublisherWrapper::wrap);
+
+		CompletionStages.join(holder.getStore().batch(holder.getAllSegments().size(), Flowable.empty(), writePublisher));
 	}
 
 	@Benchmark
