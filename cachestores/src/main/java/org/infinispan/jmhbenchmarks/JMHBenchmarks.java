@@ -7,11 +7,9 @@ import java.util.function.Predicate;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.container.entries.InternalCacheEntry;
-import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
-import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.MarshallableEntry;
-import org.infinispan.persistence.spi.SegmentedAdvancedLoadWriteStore;
+import org.infinispan.persistence.support.SegmentPublisherWrapper;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
 import org.infinispan.util.concurrent.CompletionStages;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -20,11 +18,10 @@ import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.infra.Blackhole;
 
-import io.reactivex.Flowable;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.functions.Function;
 
 @Fork(value=1, jvmArgs = {
-		"-Xmx4G",
-		"-Xms4G",
 		"-XX:+HeapDumpOnOutOfMemoryError",
 		"-XX:+AlwaysPreTouch",
 		"-Xss512k",
@@ -51,7 +48,9 @@ public class JMHBenchmarks {
 		for (int i = 0; i < holder.getBatchSize(); ++i) {
 			batch.add(newEntry(marshaller, generator));
 		}
-		CompletionStages.join(holder.getStore().bulkUpdate(Flowable.fromIterable(batch)));
+		CompletionStages.join(holder.getStore().batch(holder.getAllSegments().size(), Flowable.empty(),
+				Flowable.fromIterable(batch).groupBy(innerIce ->
+						holder.getKeyPartitioner().getSegment(innerIce.getKey())).map(SegmentPublisherWrapper::wrap)));
 	}
 
 	@Benchmark
@@ -65,62 +64,65 @@ public class JMHBenchmarks {
 	}
 
 	@Benchmark
-	public int testSize(InfinispanHolder holder) {
-		return holder.getStore().size();
+	public long testSize(InfinispanHolder holder) {
+		return holder.getStore().sizeWait(holder.getAllSegments());
 	}
 
 	@Benchmark
 	public void testPublishKeysTrue(Blackhole blackhole, InfinispanHolder holder) {
-		Flowable.fromPublisher(holder.getStore().publishKeys(f -> true))
-				.blockingForEach(blackhole::consume);
+		holder.getStore().publishKeysWait(holder.getAllSegments(), f -> true)
+				.forEach(blackhole::consume);
 	}
 
 	@Benchmark
 	public void testPublishKeysFalse(Blackhole blackhole, InfinispanHolder holder) {
-		Flowable.fromPublisher(holder.getStore().publishKeys(f -> false))
-				.blockingForEach(blackhole::consume);
+		holder.getStore().publishKeysWait(holder.getAllSegments(), f -> false)
+				.forEach(blackhole::consume);
 	}
 
 	@Benchmark
 	public void testPublishEntriesTrue(Blackhole blackhole, InfinispanHolder holder) {
-		Flowable.fromPublisher(holder.getStore().entryPublisher(f -> true, true, true))
-				.blockingForEach(blackhole::consume);
+		Flowable.fromPublisher(holder.getStore().publishEntries(holder.getAllSegments(), f -> true, true))
+				.doOnNext(blackhole::consume)
+				.blockingSubscribe();
+	}
+
+	@Benchmark
+	public void testPublishEntriesUseValues(Blackhole blackhole, InfinispanHolder holder) {
+		Long count = (Long) Flowable.fromPublisher(holder.getStore().publishEntries(holder.getAllSegments(), f -> true, true))
+				.map(o -> ((MarshallableEntry) o).getValue())
+				.count()
+				.blockingGet();
+
+		if (count != holder.getGenerator().distinctEntries) {
+			throw new RuntimeException("Number of entries does not match! - expected " +
+					holder.getGenerator().distinctEntries + " but received " + count);
+		}
 	}
 
 	@Benchmark
 	public void testPublishEntriesFalse(Blackhole blackhole, InfinispanHolder holder) {
-		Flowable.fromPublisher(holder.getStore().entryPublisher(f -> false, true, true))
-				.blockingForEach(blackhole::consume);
+		Flowable.fromPublisher(holder.getStore().publishEntries(holder.getAllSegments(), f -> false, true))
+				.doOnNext(blackhole::consume)
+				.blockingSubscribe();
 	}
 
 	<R> void keysPublisherHalfSegments(Blackhole blackhole, InfinispanHolder holder,
 			Predicate<Object> predicate) {
-		AdvancedLoadWriteStore alws = holder.getStore();
-		IntSet intSet = holder.getHalfSegments();
-		KeyPartitioner keyPartitioner = holder.getKeyPartitioner();
-		if (alws instanceof SegmentedAdvancedLoadWriteStore) {
-			Flowable.fromPublisher(((SegmentedAdvancedLoadWriteStore) alws).publishKeys(intSet, predicate))
-					.blockingForEach(blackhole::consume);
-		} else {
-			Predicate<? super R> segmentFilter = k -> intSet.contains(keyPartitioner.getSegment(k));
-			Flowable.fromPublisher(alws.publishKeys(segmentFilter.and(predicate)))
-					.blockingForEach(blackhole::consume);
-		}
+		holder.getStore().publishKeysWait(holder.getHalfSegments(), predicate)
+				.forEach(blackhole::consume);
 	}
 
 	void entriesPublisherHalfSegments(Blackhole blackhole, InfinispanHolder holder,
-			Predicate<Object> predicate) {
-		AdvancedLoadWriteStore alws = holder.getStore();
-		IntSet intSet = holder.getHalfSegments();
-		KeyPartitioner keyPartitioner = holder.getKeyPartitioner();
-		if (alws instanceof SegmentedAdvancedLoadWriteStore) {
-			Flowable.fromPublisher(((SegmentedAdvancedLoadWriteStore) alws).entryPublisher(intSet, predicate, true, true))
-					.blockingForEach(blackhole::consume);
-		} else {
-			Predicate<Object> segmentFilter = e -> intSet.contains(keyPartitioner.getSegment(e));
-			Flowable.fromPublisher(alws.entryPublisher(segmentFilter.and(predicate), true, true))
-					.blockingForEach(blackhole::consume);
+												 Predicate<Object> predicate, Function<MarshallableEntry, Object> function) {
+		Flowable<Object> flowable = Flowable.fromPublisher(holder.getStore().publishEntries
+				(holder.getHalfSegments(), predicate, true));
+		if (function != null) {
+			flowable = flowable.map((Function) function);
 		}
+		flowable
+				.doOnNext(blackhole::consume)
+				.blockingSubscribe();
 	}
 
 	@Benchmark
@@ -135,11 +137,16 @@ public class JMHBenchmarks {
 
 	@Benchmark
 	public void testPublishEntriesTrueHalfSegments(Blackhole blackhole, InfinispanHolder holder) {
-		entriesPublisherHalfSegments(blackhole, holder, f -> true);
+		entriesPublisherHalfSegments(blackhole, holder, f -> true, null);
+	}
+
+	@Benchmark
+	public void testPublishEntriesTrueHalfSegmentsUseValues(Blackhole blackhole, InfinispanHolder holder) {
+		entriesPublisherHalfSegments(blackhole, holder, f -> true, MarshallableEntry::getValue);
 	}
 
 	@Benchmark
 	public void testPublishEntriesFalseHalfSegments(Blackhole blackhole, InfinispanHolder holder) {
-		entriesPublisherHalfSegments(blackhole, holder, f -> false);
+		entriesPublisherHalfSegments(blackhole, holder, f -> false, null);
 	}
 }

@@ -18,7 +18,12 @@
         <jmh.version>1.20</jmh.version>
         <javac.target>1.8</javac.target>
         <uberjar.name>benchmarks</uberjar.name>
-        <infinispan.version>10.0.0-SNAPSHOT</infinispan.version>
+        <!--
+        <infinispan.version>12.1.0.Dev01</infinispan.version>
+        <protostream.version>4.4.0.Alpha4</protostream.version>
+        -->
+        <infinispan.version>12.1.0-SNAPSHOT</infinispan.version>
+        <protostream.version>4.4.0.Alpha7</protostream.version>
     </properties>
 
     <dependencies>
@@ -48,6 +53,17 @@
             <artifactId>infinispan-persistence-soft-index</artifactId>
             <version>${infinispan.version}</version>
         </dependency>
+  <dependency>
+    <groupId>org.infinispan.protostream</groupId>
+    <artifactId>protostream-processor</artifactId>
+    <version>${protostream.version}</version>
+    <!--
+      This dependency should be declared in the "provided" scope or made "optional"
+      because it is a compile-only dependency and is not required at runtime.
+      Transitive propagation of this dependency should be also be avoided.
+    -->
+    <scope>provided</scope>
+  </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
