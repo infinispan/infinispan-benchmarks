@@ -31,7 +31,7 @@ import io.reactivex.rxjava3.functions.Function;
 		"-XX:LargePageSizeInBytes=2m"})
 @BenchmarkMode(Mode.Throughput)
 public class JMHBenchmarks {
-	private static MarshallableEntry newEntry(Marshaller marshaller, KeySequenceGenerator generator) {
+	private static MarshallableEntry<?, ?> newEntry(Marshaller marshaller, KeySequenceGenerator generator) {
 		InternalCacheEntry ice = TestInternalCacheEntryFactory.create(generator.getNextKey(), generator.getNextValue());
 		return MarshalledEntryUtil.create(ice, marshaller);
 	}
@@ -43,8 +43,8 @@ public class JMHBenchmarks {
 
 	@Benchmark
 	public void testWriteBatch(InfinispanHolder holder, KeySequenceGenerator generator) {
-		Flowable<MarshallableEntry<?, ?>> entryFlowable = (Flowable)
-				Flowable.fromSupplier(() -> newEntry(holder.getMarshaller(), generator))
+		Flowable<MarshallableEntry<?, ?>> entryFlowable =
+				Flowable.<MarshallableEntry<?, ?>>generate(emitter -> emitter.onNext(newEntry(holder.getMarshaller(), generator)))
 						.take(holder.getBatchSize());
 
 		Publisher<NonBlockingStore.SegmentedPublisher<MarshallableEntry<?, ?>>> writePublisher = entryFlowable
