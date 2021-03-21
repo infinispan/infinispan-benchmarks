@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration name="CommandLineConfig" status="debug">
+  <Appenders>
+    <Console name="STDOUT">
+      <PatternLayout pattern="%d{HH:mm:ss,SSS} %-5p (%t) [%c{1}] %m%n%throwable{10}"/>
+    </Console>
+    <File name="File" fileName="benchmark-${date:yyyy-MM-dd_HH-mm}.log"
+          append="false">
+      <PatternLayout pattern="%d{HH:mm:ss,SSS} %-5p (%t:%x) [%c{1}] %m%n"/>
+    </File>
+<!--    <RollingFile name="File" filePattern="benchmark-%d{yyyy-MM-dd_HH-mm}.log">-->
+<!--      <PatternLayout pattern="%d{HH:mm:ss,SSS} %-5p (%t:%x) [%c{1}] %m%n"/>-->
+
+<!--      <Policies>-->
+<!--        <OnStartupTriggeringPolicy/>-->
+<!--      </Policies>-->
+<!--    </RollingFile>-->
+  </Appenders>
+
+  <Loggers>
+    <Logger name="org.infinispan" level="DEBUG"/>
+    <Logger name="org.jgroups" level="DEBUG"/>
+    <Logger name="com.mchange" level="WARN"/>
+    <Logger name="org.jgroups.protocols.MPING" level="TRACE"/>
+    <Logger name="org.jgroups.protocols.TCPPING" level="TRACE"/>
+
+    <Root level="DEBUG">
+      <AppenderRef ref="STDOUT" level="WARN"/>
+      <AppenderRef ref="File"/>
+    </Root>
+  </Loggers>
+</Configuration>
