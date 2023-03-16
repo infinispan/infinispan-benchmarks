@@ -34,7 +34,7 @@ public class PipelineState extends NettyChannelState {
 
       CompositeByteBuf setBuffer = Unpooled.compositeBuffer(messageCount);
       for (int i = 0; i < messageCount; ++i) {
-         getBuffer.addComponent(true, Unpooled.copiedBuffer("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n", CharsetUtil.US_ASCII));
+         setBuffer.addComponent(true, Unpooled.copiedBuffer("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n", CharsetUtil.US_ASCII));
       }
 
       SET_REQUEST = Unpooled.unreleasableBuffer(setBuffer);

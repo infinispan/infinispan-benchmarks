@@ -12,15 +12,29 @@ import io.netty.channel.embedded.EmbeddedChannel;
 public class NettyChannelState {
    public EmbeddedChannel channel;
 
+   public enum DECODER {
+      CURRENT,
+      NEW
+   }
+
+   @Param
+   public DECODER decoder;
+
    @Setup
    public void initializeState() {
 
       channel = new EmbeddedChannel();
       channel.config().setAllocator(PooledByteBufAllocator.DEFAULT);
 
-      OurRespHandler ourRespHandler = new OurRespHandler();
-
-      channel.pipeline()
-            .addLast(new RespDecoder(ourRespHandler));
+      switch (decoder) {
+         case NEW:
+            channel.pipeline()
+                  .addLast(new NewDecoder(new NewRespHandler()));
+            break;
+         case CURRENT:
+            channel.pipeline()
+                  .addLast(new RespDecoder(new OurRespHandler()));
+            break;
+      }
    }
 }
