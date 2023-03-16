@@ -10,14 +10,6 @@ import io.netty.channel.embedded.EmbeddedChannel;
 
 @State(Scope.Benchmark)
 public class NettyChannelState {
-   public enum DECODER {
-      LETTUCE,
-      GENERATED
-   }
-
-   @Param
-   public GetSetState.DECODER decoderToUse;
-
    public EmbeddedChannel channel;
 
    @Setup
@@ -28,15 +20,7 @@ public class NettyChannelState {
 
       OurRespHandler ourRespHandler = new OurRespHandler();
 
-      switch (decoderToUse) {
-         case LETTUCE:
-            channel.pipeline()
-                  .addLast(new RespLettuceHandler(ourRespHandler));
-            break;
-         case GENERATED:
-            channel.pipeline()
-                  .addLast(new RespDecoder(ourRespHandler));
-            break;
-      }
+      channel.pipeline()
+            .addLast(new RespDecoder(ourRespHandler));
    }
 }
