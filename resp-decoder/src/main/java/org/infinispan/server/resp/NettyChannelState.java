@@ -13,8 +13,7 @@ public class NettyChannelState {
    public EmbeddedChannel channel;
 
    public enum DECODER {
-      CURRENT,
-      NEW
+      CURRENT
    }
 
    @Param
@@ -27,14 +26,13 @@ public class NettyChannelState {
       channel.config().setAllocator(PooledByteBufAllocator.DEFAULT);
 
       switch (decoder) {
-         case NEW:
-            channel.pipeline()
-                  .addLast(new NewDecoder(new NewRespHandler()));
-            break;
          case CURRENT:
             channel.pipeline()
                   .addLast(new RespDecoder(new OurRespHandler()));
             break;
       }
+
+      // Ensure the ByteBufPool is initialized
+      channel.pipeline().fireChannelRegistered();
    }
 }
