@@ -32,22 +32,29 @@
 package org.infinispan.server.resp;
 
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 import org.infinispan.server.resp.GetSetState;
 import org.infinispan.server.resp.PipelineState;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Warmup;
 
 import io.netty.buffer.ByteBuf;
 
 @Warmup(time = 5)
 @Fork(1)
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class MyBenchmark {
 
     @Benchmark
     public ByteBuf testGetPerf(GetSetState state) {
         state.channel.writeInbound(state.GET_REQUEST.duplicate());
+        state.channel.checkException();
 
         // Should return immediately
         ByteBuf buf = state.channel.readOutbound();
@@ -63,6 +70,7 @@ public class MyBenchmark {
     @Benchmark
     public ByteBuf testSetPerf(GetSetState state) {
         state.channel.writeInbound(state.SET_REQUEST.duplicate());
+        state.channel.checkException();
 
         // Should return immediately
         ByteBuf buf = state.channel.readOutbound();
