@@ -34,8 +34,6 @@ package org.infinispan.server.resp;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.server.resp.GetSetState;
-import org.infinispan.server.resp.PipelineState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -120,5 +118,27 @@ public class MyBenchmark {
         if (writtenAmount != 5 * state.messageCount) {
             throw new AssertionError("Set should have returned " + 5 * state.messageCount + " bytes, but was " + writtenAmount);
         }
+    }
+
+    @Benchmark
+    public int testSimpleStringNameParsing(NameState nameState) {
+        ByteBuf buf = nameState.nextRequest().duplicate();
+        buf.readerIndex(buf.readerIndex() + 2);
+        String name = Intrinsics.simpleString(buf);
+        return NameState.Names.handleString(name);
+    }
+
+    @Benchmark
+    public int testStringNameParsing(NameState nameState) {
+        ByteBuf buf = nameState.nextRequest().duplicate();
+        String name = Intrinsics.bulkString(buf, LongProcessorOverride.INSTANCE);
+        return NameState.Names.handleString(name);
+    }
+
+    @Benchmark
+    public int testNewNameParsing(NameState nameState) {
+        ByteBuf buf = nameState.nextRequest().duplicate();
+        buf.readerIndex(buf.readerIndex() + 2);
+        return NameState.Names.handleByteBuf(buf);
     }
 }
