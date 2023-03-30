@@ -10,16 +10,16 @@ import org.infinispan.commons.util.concurrent.CompletableFutures;
 
 import io.netty.channel.ChannelHandlerContext;
 
-public class OurRespHandler extends RespRequestHandler {
+public class NewRespHandler extends NewRespRequestHandler {
    private static final CompletableFuture<byte[]> GET_FUTURE = CompletableFuture.completedFuture(new byte[] { 0x1, 0x12});
    public static byte[] OK = "+OK\r\n".getBytes(StandardCharsets.US_ASCII);
 
    @Override
-   public CompletionStage<RespRequestHandler> actualHandleRequest(ChannelHandlerContext ctx, String type, List<byte[]> arguments) {
+   public CompletionStage<NewRespRequestHandler> actualHandleRequest(ChannelHandlerContext ctx, RespCommand type, List<byte[]> arguments) {
       switch (type) {
-         case "GET":
+         case GET:
             return stageToReturn(GET_FUTURE, ctx, GET_TRICONSUMER);
-         case "SET":
+         case SET:
             return stageToReturn(CompletableFutures.completedNull(), ctx, OK_BICONSUMER);
       }
       return super.handleRequest(ctx, type, arguments);

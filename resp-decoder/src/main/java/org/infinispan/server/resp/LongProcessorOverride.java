@@ -2,7 +2,7 @@ package org.infinispan.server.resp;
 
 import io.netty.buffer.ByteBuf;
 
-public class LongProcessorOverride extends Intrinsics.Resp2LongProcessor {
+public class LongProcessorOverride extends NewIntrinsics.Resp2LongProcessor {
    static LongProcessorOverride INSTANCE = new LongProcessorOverride();
 
    private LongProcessorOverride() {

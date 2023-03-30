@@ -13,7 +13,8 @@ public class NettyChannelState {
    public EmbeddedChannel channel;
 
    public enum DECODER {
-      CURRENT
+      CURRENT,
+      NEW
    }
 
    @Param
@@ -29,6 +30,10 @@ public class NettyChannelState {
          case CURRENT:
             channel.pipeline()
                   .addLast(new RespDecoder(new OurRespHandler()));
+            break;
+         case NEW:
+            channel.pipeline()
+                  .addLast(new NewRespDecoder(new NewRespHandler()));
             break;
       }
 

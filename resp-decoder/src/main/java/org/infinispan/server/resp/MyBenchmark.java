@@ -124,14 +124,14 @@ public class MyBenchmark {
     public int testSimpleStringNameParsing(NameState nameState) {
         ByteBuf buf = nameState.nextRequest().duplicate();
         buf.readerIndex(buf.readerIndex() + 2);
-        String name = Intrinsics.simpleString(buf);
+        String name = NewIntrinsics.simpleString(buf);
         return NameState.Names.handleString(name);
     }
 
     @Benchmark
     public int testStringNameParsing(NameState nameState) {
         ByteBuf buf = nameState.nextRequest().duplicate();
-        String name = Intrinsics.bulkString(buf, LongProcessorOverride.INSTANCE);
+        String name = NewIntrinsics.bulkString(buf, LongProcessorOverride.INSTANCE);
         return NameState.Names.handleString(name);
     }
 
