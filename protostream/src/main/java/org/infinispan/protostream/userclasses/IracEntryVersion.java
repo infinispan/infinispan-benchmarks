@@ -39,7 +39,7 @@ public class IracEntryVersion {
    }
 
    @ProtoTypeId(5)
-   public static class MapEntry {
+   public static class MapEntry implements Comparable<MapEntry> {
 
       final String site;
 
@@ -55,6 +55,11 @@ public class IracEntryVersion {
       @ProtoField(1)
       public String getSite() {
          return site;
+      }
+
+      @Override
+      public int compareTo(MapEntry o) {
+         return version.compareTo(o.version);
       }
    }
 }

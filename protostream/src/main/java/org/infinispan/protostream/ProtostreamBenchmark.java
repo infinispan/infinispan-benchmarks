@@ -2,6 +2,7 @@ package org.infinispan.protostream;
 
 import static org.infinispan.protostream.userclasses.BenchmarkSerializationContextInitializer.INSTANCE;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import org.infinispan.protostream.impl.ByteArrayOutputStreamEx;
 import org.infinispan.protostream.userclasses.Address;
 import org.infinispan.protostream.userclasses.IracEntryVersion;
 import org.infinispan.protostream.userclasses.IracMetadata;
@@ -24,10 +26,10 @@ import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
-import org.openjdk.jmh.infra.Blackhole;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -41,6 +43,13 @@ public class ProtostreamBenchmark {
    private final Address address;
    private final User user;
    private final IracMetadata metadata;
+
+   byte[] addressBytes;
+   byte[] userBytes;
+   byte[] metadataBytes;
+
+   @Param({"true", "false"})
+   boolean byteArrayOrStream;
 
    public ProtostreamBenchmark() {
       ctx = ProtobufUtil.newSerializationContext();
@@ -60,22 +69,71 @@ public class ProtostreamBenchmark {
       versions.put("site_2", TopologyIracVersion.newVersion(15).increment(15));
       IracEntryVersion version = new IracEntryVersion(versions);
       metadata = new IracMetadata("site_1", version);
+
+      try {
+         addressBytes = ProtobufUtil.toWrappedByteArray(ctx, address);
+         userBytes = ProtobufUtil.toWrappedByteArray(ctx, user);
+         metadataBytes = ProtobufUtil.toWrappedByteArray(ctx, metadata);
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
    }
 
 
    @Benchmark
-   public void testMarshallAddress(Blackhole blackhole) throws IOException {
-      blackhole.consume(ProtobufUtil.toWrappedByteArray(ctx, address));
+   public Object testMarshallAddress() throws IOException {
+      if (byteArrayOrStream)
+         return ProtobufUtil.toWrappedByteArray(ctx, address);
+      else {
+         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(addressBytes.length);
+         ProtobufUtil.toWrappedStream(ctx, os, address);
+         return os.getByteBuffer();
+      }
    }
 
    @Benchmark
-   public void testMarshallUser(Blackhole blackhole) throws IOException {
-      blackhole.consume(ProtobufUtil.toWrappedByteArray(ctx, user));
+   public Object testMarshallUser() throws IOException {
+      if (byteArrayOrStream)
+         return ProtobufUtil.toWrappedByteArray(ctx, user);
+      else {
+         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(userBytes.length);
+         ProtobufUtil.toWrappedStream(ctx, os, user);
+         return os.getByteBuffer();
+      }
    }
 
    @Benchmark
-   public void testMarshallIracMetadata(Blackhole blackhole) throws IOException {
-      blackhole.consume(ProtobufUtil.toWrappedByteArray(ctx, metadata));
+   public Object testMarshallIracMetadata() throws IOException {
+      if (byteArrayOrStream)
+         return ProtobufUtil.toWrappedByteArray(ctx, metadata);
+      else {
+         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(metadataBytes.length);
+         ProtobufUtil.toWrappedStream(ctx, os, metadata);
+         return os.getByteBuffer();
+      }
    }
 
+   @Benchmark
+   public Address testUnmarshallAddress() throws IOException {
+      if (byteArrayOrStream)
+         return ProtobufUtil.fromWrappedByteArray(ctx, addressBytes);
+      else
+         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(addressBytes));
+   }
+
+   @Benchmark
+   public User testUnmarshallUser() throws IOException {
+      if (byteArrayOrStream)
+         return ProtobufUtil.fromWrappedByteArray(ctx, userBytes);
+      else
+         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(userBytes));
+   }
+
+   @Benchmark
+   public IracMetadata testUnmarshallMetadata() throws IOException {
+      if (byteArrayOrStream)
+         return ProtobufUtil.fromWrappedByteArray(ctx, metadataBytes);
+      else
+         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(metadataBytes));
+   }
 }
