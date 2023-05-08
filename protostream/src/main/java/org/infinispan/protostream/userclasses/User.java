@@ -2,6 +2,7 @@ package org.infinispan.protostream.userclasses;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -33,8 +34,10 @@ public class User {
    private Instant creationDate;
    private Instant passwordExpirationDate;
 
+   private byte[] encryptedAcountInfo;
+
    @ProtoFactory
-   public User(int id, String name, String surname, Set<Integer> accountIds, List<Address> addresses, Integer age, Gender gender, String notes, Instant creationDate, Instant passwordExpirationDate) {
+   public User(int id, String name, String surname, Set<Integer> accountIds, List<Address> addresses, Integer age, Gender gender, String notes, Instant creationDate, Instant passwordExpirationDate, byte[] encryptedAcountInfo) {
       this.id = id;
       this.name = name;
       this.surname = surname;
@@ -45,6 +48,7 @@ public class User {
       this.notes = notes;
       this.creationDate = creationDate;
       this.passwordExpirationDate = passwordExpirationDate;
+      this.encryptedAcountInfo = encryptedAcountInfo;
    }
 
    @ProtoField(value = 1, required = true)
@@ -137,6 +141,15 @@ public class User {
       this.passwordExpirationDate = passwordExpirationDate;
    }
 
+   @ProtoField(value = 11)
+   public byte[] getEncryptedAcountInfo() {
+      return encryptedAcountInfo;
+   }
+
+   public void setEncryptedAcountInfo(byte[] encryptedAcountInfo) {
+      this.encryptedAcountInfo = encryptedAcountInfo;
+   }
+
    @Override
    public String toString() {
       return "User{" +
@@ -147,9 +160,10 @@ public class User {
             ", addresses=" + addresses +
             ", age=" + age +
             ", gender=" + gender +
-            ", notes=" + notes +
-            ", creationDate='" + creationDate + '\'' +
-            ", passwordExpirationDate='" + passwordExpirationDate + '\'' +
+            ", notes='" + notes + '\'' +
+            ", creationDate=" + creationDate +
+            ", passwordExpirationDate=" + passwordExpirationDate +
+            ", encryptedAcountInfo=" + Arrays.toString(encryptedAcountInfo) +
             '}';
    }
 
@@ -167,11 +181,12 @@ public class User {
             gender == user.gender &&
             Objects.equals(notes, user.notes) &&
             Objects.equals(creationDate, user.creationDate) &&
-            Objects.equals(passwordExpirationDate, user.passwordExpirationDate);
+            Objects.equals(passwordExpirationDate, user.passwordExpirationDate) &&
+            Arrays.equals(encryptedAcountInfo, user.encryptedAcountInfo);
    }
 
    @Override
    public int hashCode() {
-      return Objects.hash(id, name, surname, accountIds, addresses, age, gender, notes, creationDate, passwordExpirationDate);
+      return Objects.hash(id, name, surname, accountIds, addresses, age, gender, notes, creationDate, passwordExpirationDate, encryptedAcountInfo);
    }
 }
