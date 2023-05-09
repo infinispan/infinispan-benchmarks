@@ -12,11 +12,15 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 @State(Scope.Benchmark)
 public class MetadataState {
    private IracMetadata metadata;
 
    byte[] metadataBytes;
+   private ByteBuf metadataByteBuf;
    @Setup
    public void setup(ContextState contextState) throws IOException {
       Map<String, TopologyIracVersion> versions = new HashMap<>();
@@ -26,6 +30,7 @@ public class MetadataState {
       metadata = new IracMetadata("site_1", version);
 
       metadataBytes = ProtobufUtil.toWrappedByteArray(contextState.getCtx(), metadata);
+      metadataByteBuf = Unpooled.wrappedBuffer(metadataBytes);
    }
 
    public IracMetadata getMetadata() {
@@ -34,5 +39,9 @@ public class MetadataState {
 
    public byte[] getMetadataBytes() {
       return metadataBytes;
+   }
+
+   public ByteBuf getMetadataByteBuf() {
+      return metadataByteBuf.slice();
    }
 }

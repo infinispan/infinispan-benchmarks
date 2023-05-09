@@ -15,12 +15,16 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 @State(Scope.Benchmark)
 public class UserState {
    @Param({"10", "8096"})
    int userByteArraySize;
    private User user;
    private byte[] userBytes;
+   private ByteBuf userByteBuf;
    @Setup
    public void setup(ContextState contextState, AddressState addressState) throws IOException {
       byte[] data = new byte[userByteArraySize];
@@ -32,6 +36,7 @@ public class UserState {
             User.Gender.MALE, null, Instant.now(), Instant.now().plusMillis(TimeUnit.DAYS.toMillis(30)), data);
 
       userBytes = ProtobufUtil.toWrappedByteArray(contextState.getCtx(), user);
+      userByteBuf = Unpooled.wrappedBuffer(userBytes);
    }
 
    public User getUser() {
@@ -40,5 +45,9 @@ public class UserState {
 
    public byte[] getUserBytes() {
       return userBytes;
+   }
+
+   public ByteBuf getUserByteBuf() {
+      return userByteBuf.slice();
    }
 }

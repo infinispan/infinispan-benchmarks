@@ -67,6 +67,11 @@ THE POSSIBILITY OF SUCH DAMAGE.
             <artifactId>protostream-processor</artifactId>
             <version>${protostream.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>4.1.92.Final</version>
+        </dependency>
 
     </dependencies>
 
@@ -81,7 +86,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
         <!--
             Java source/target to use for compilation.
           -->
-        <javac.target>11</javac.target>
+        <javac.target>17</javac.target>
 
         <!--
             Name of the benchmark Uber-JAR to generate.
