@@ -27,8 +27,9 @@ public class NettyChannelState {
 
       switch (decoder) {
          case CURRENT:
+            RespDecoder d = new RespDecoder();
             channel.pipeline()
-                  .addLast(new RespDecoder(new OurRespHandler()));
+                  .addLast(d, new RespHandler(d, new OurRespHandler()));
             break;
       }
 
