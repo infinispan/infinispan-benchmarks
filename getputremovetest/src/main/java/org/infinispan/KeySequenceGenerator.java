@@ -1,10 +1,17 @@
 package org.infinispan;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Set;
 
 import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.apache.commons.math3.random.RandomDataGenerator;
+import org.infinispan.commons.io.UnsignedNumeric;
+import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.commons.util.Util;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -109,6 +116,32 @@ public class KeySequenceGenerator {
 			else
 				return false;
 		}
+	}
 
+	public static class ValueWrapperSerializer implements AdvancedExternalizer<ValueWrapper> {
+
+		@Override
+		public Set<Class<? extends ValueWrapper>> getTypeClasses() {
+			return Util.asSet(ValueWrapper.class);
+		}
+
+		@Override
+		public Integer getId() {
+			return 205;
+		}
+
+		@Override
+		public void writeObject(ObjectOutput objectOutput, ValueWrapper valueWrapper) throws IOException {
+			UnsignedNumeric.writeUnsignedInt(objectOutput, valueWrapper.bytes.length);
+			objectOutput.write(valueWrapper.bytes);
+		}
+
+		@Override
+		public ValueWrapper readObject(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+			int size = UnsignedNumeric.readUnsignedInt(objectInput);
+			byte[] bytes = new byte[size];
+			objectInput.read(bytes);
+			return new ValueWrapper(bytes);
+		}
 	}
 }
