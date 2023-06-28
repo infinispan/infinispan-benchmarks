@@ -1,5 +1,6 @@
 package org.infinispan;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -23,36 +24,36 @@ import org.openjdk.jmh.infra.Blackhole;
 @BenchmarkMode(Mode.Throughput)
 public class JMHBenchmarks {
 
-//	@Benchmark
-//	@GroupThreads(2)
-//	@Group("getPutHotRod")
-//	public void infinispanRemoteRemove(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
-//		Object key = kg.getNextKey();
-//		RemoteCache cache = ih.getCache();
-//		bh.consume( cache.remove( key) );
-//		ih.cacheRemoveDone();
-//	}
-//
-//	@Benchmark
-//	@GroupThreads(4)
-//	@Group("getPutHotRod")
-//	public void infinispanRemotePut(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
-//		Object key = kg.getNextKey();
-//		Object value = kg.getNextValue();
-//		RemoteCache cache = ih.getCache();
-//		bh.consume( cache.put( key, value ) );
-//		ih.cachePutDone();
-//	}
-//
-//	@Benchmark
-//	@GroupThreads(16)
-//	@Group("getPutHotRod")
-//	public void infinispanRemoteGet(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
-//		Object key = kg.getNextKey();
-//		RemoteCache cache = ih.getCache();
-//		bh.consume( cache.get( key ) );
-//		ih.cacheGetDone();
-//	}
+	@Benchmark
+	@GroupThreads(2)
+	@Group("getPutHotRod")
+	public void infinispanRemoteRemove(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
+		Object key = kg.getNextKey();
+		RemoteCache cache = ih.getCache();
+		bh.consume( cache.remove( key) );
+		ih.cacheRemoveDone();
+	}
+
+	@Benchmark
+	@GroupThreads(4)
+	@Group("getPutHotRod")
+	public void infinispanRemotePut(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
+		Object key = kg.getNextKey();
+		Object value = kg.getNextValue();
+		RemoteCache cache = ih.getCache();
+		bh.consume( cache.put( key, value ) );
+		ih.cachePutDone();
+	}
+
+	@Benchmark
+	@GroupThreads(16)
+	@Group("getPutHotRod")
+	public void infinispanRemoteGet(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
+		Object key = kg.getNextKey();
+		RemoteCache cache = ih.getCache();
+		bh.consume( cache.get( key ) );
+		ih.cacheGetDone();
+	}
 
 	@Benchmark
 	@Threads(16)

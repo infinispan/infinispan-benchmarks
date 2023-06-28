@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="urn:infinispan:config:15.0">
+
+    <cache-container name="default" default-cache="testCache">
+        <transport stack="tcp" lock-timeout="600000" cluster="default" />
+        <serialization>
+            <advanced-externalizer class="org.infinispan.KeySequenceGenerator$ValueWrapperSerializer"/>
+        </serialization>
+
+        <distributed-cache name="testCache" mode="SYNC" >
+            <state-transfer enabled="false" />
+        </distributed-cache>
+    </cache-container>
+
+</infinispan>
