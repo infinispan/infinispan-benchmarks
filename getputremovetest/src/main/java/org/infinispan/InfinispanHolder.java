@@ -69,12 +69,12 @@ public class InfinispanHolder {
 
 		Executor jgroupsThreadPool = Executors.newFixedThreadPool(100, new org.jgroups.util.DefaultThreadFactory("jgroups", true));
 
-		ExecutorService nonBlockingExecutor = Executors.newFixedThreadPool(ProcessorInfo.availableProcessors() * 2, new NonBlockingThreadFactory("ISPN-non-blocking-thread-group", Thread.NORM_PRIORITY,
+		ExecutorService nonBlockingExecutor = Executors.newFixedThreadPool(ProcessorInfo.availableProcessors() * 2, new NonBlockingThreadFactory(Thread.NORM_PRIORITY,
 				DefaultThreadFactory.DEFAULT_PATTERN, "All", "non-blocking"));
 
 		BlockingTaskAwareExecutorService nonBlockingTaskAwareExecutorService = new BlockingTaskAwareExecutorServiceImpl(nonBlockingExecutor, timeService);
 
-		ExecutorService blockingExecutor = Executors.newFixedThreadPool(150, new BlockingThreadFactory("ISPN-blocking-thread-group", Thread.NORM_PRIORITY,
+		ExecutorService blockingExecutor = Executors.newFixedThreadPool(150, new BlockingThreadFactory(Thread.NORM_PRIORITY,
 				DefaultThreadFactory.DEFAULT_PATTERN, "All", "blocking"));
 
 		BlockingTaskAwareExecutorService blockingTaskAwareExecutorService = new BlockingTaskAwareExecutorServiceImpl(blockingExecutor, timeService);
@@ -86,7 +86,7 @@ public class InfinispanHolder {
 			// This is only using a local cache for now
 			DefaultCacheManager mgr = new DefaultCacheManager(new GlobalConfigurationBuilder().clusteredDefault().defaultCacheName("default").build(),
 					configurationBuilder.build(), false);
-			GlobalComponentRegistry gcr = mgr.getGlobalComponentRegistry();
+			GlobalComponentRegistry gcr = GlobalComponentRegistry.of(mgr);
 			BasicComponentRegistry gbcr = gcr.getComponent(BasicComponentRegistry.class);
 			gbcr.replaceComponent(KnownComponentNames.NON_BLOCKING_EXECUTOR, nonBlockingTaskAwareExecutorService, true);
 			gbcr.replaceComponent(KnownComponentNames.BLOCKING_EXECUTOR, blockingTaskAwareExecutorService, true);

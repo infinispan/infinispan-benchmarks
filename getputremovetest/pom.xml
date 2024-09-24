@@ -48,7 +48,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
         <javac.target>11</javac.target>
 
         <uberjar.name>benchmarks</uberjar.name>
-        <infinispan.version>15.0.0-SNAPSHOT</infinispan.version>
+        <infinispan.version>15.1.0-SNAPSHOT</infinispan.version>
     </properties>
 
    <dependencies>
