@@ -80,7 +80,6 @@ THE POSSIBILITY OF SUCH DAMAGE.
            <version>7.7.0</version>
        </dependency>
 
-       <!--
        <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-hotrod</artifactId>
@@ -88,10 +87,9 @@ THE POSSIBILITY OF SUCH DAMAGE.
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-client-hotrod</artifactId>
+            <artifactId>infinispan-client-hotrod-new</artifactId>
             <version>${infinispan.version}</version>
         </dependency>
-        -->
     </dependencies>
 
 
