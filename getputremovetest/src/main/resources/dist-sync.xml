@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="urn:infinispan:config:15.0">
+
+    <cache-container name="default" default-cache="testCache">
+        <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:tcp}" node-name="${infinispan.node.name:}"/>
+        <distributed-cache name="testCache">
+        </distributed-cache>
+    </cache-container>
+
+</infinispan>
