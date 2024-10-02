@@ -69,6 +69,8 @@ public class InfinispanRemoteHolder {
       }
 
       ConfigurationBuilder remoteCacheConfigurationBuilder = new ConfigurationBuilder();
+      // Including server automatically enables this
+      remoteCacheConfigurationBuilder.disableTracingPropagation();
       remoteCacheConfigurationBuilder.connectionPool().maxActive(maxPoolSize);
       remoteCacheConfigurationBuilder.addServer().host(firstConfig.host()).port(firstConfig.port());
       for (int i = 0; i < remoteClients; ++i) {
