@@ -47,6 +47,9 @@ public class InfinispanRemoteHolder {
    @Param({"-1"})
    private int maxPoolSize;
 
+   @Param("false")
+   private boolean enableTelemetry;
+
    @Setup
    public void initializeState() throws IOException {
       mgrs = new DefaultCacheManager[nodes];
@@ -70,7 +73,10 @@ public class InfinispanRemoteHolder {
 
       ConfigurationBuilder remoteCacheConfigurationBuilder = new ConfigurationBuilder();
       // Including server automatically enables this
-      remoteCacheConfigurationBuilder.disableTracingPropagation();
+      if (!enableTelemetry) {
+         remoteCacheConfigurationBuilder.disableTracingPropagation();
+      }
+      remoteCacheConfigurationBuilder.addContextInitializer(new BenchmarkInitializerImpl());
       remoteCacheConfigurationBuilder.connectionPool().maxActive(maxPoolSize);
       remoteCacheConfigurationBuilder.addServer().host(firstConfig.host()).port(firstConfig.port());
       for (int i = 0; i < remoteClients; ++i) {

@@ -1,10 +1,13 @@
 package org.infinispan;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.apache.commons.math3.random.RandomDataGenerator;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -81,7 +84,12 @@ public class KeySequenceGenerator {
 		}
 	}
 
-	private static final class ValueWrapper implements Serializable {
+	@ProtoSchema(includeClasses = { ValueWrapper.class }, schemaFileName = "benchmark.proto", schemaFilePath = "proto", schemaPackageName = "benchmark")
+	public interface BenchmarkInitializer extends SerializationContextInitializer {
+
+	}
+
+	public static final class ValueWrapper {
 
 		private final byte[] bytes;
 		private final int hashCode;
@@ -90,9 +98,15 @@ public class KeySequenceGenerator {
 			this(nextHexString.getBytes());
 		}
 
-		protected ValueWrapper(byte[] bytes) {
+		@ProtoFactory
+		public ValueWrapper(byte[] bytes) {
 			this.bytes = bytes;
 			this.hashCode = Arrays.hashCode(bytes);
+		}
+
+		@ProtoField(1)
+		public byte[] getBytes() {
+			return bytes;
 		}
 
 		@Override
