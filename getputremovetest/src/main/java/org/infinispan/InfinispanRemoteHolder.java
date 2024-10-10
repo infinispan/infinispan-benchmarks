@@ -83,6 +83,11 @@ public class InfinispanRemoteHolder {
          remotes[i] = new RemoteCacheManager(remoteCacheConfigurationBuilder.build());
          caches[i] = remotes[i].getCache();
       }
+
+      // Start all the servers at the end
+      for (int i = 0; i < nodes; ++i) {
+         servers[i].postStart();
+      }
    }
 
    @TearDown

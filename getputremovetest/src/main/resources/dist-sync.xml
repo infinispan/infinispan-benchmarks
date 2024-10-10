@@ -7,6 +7,7 @@
     <cache-container name="default" default-cache="testCache">
         <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:tcp}" node-name="${infinispan.node.name:}"/>
         <distributed-cache name="testCache">
+            <encoding media-type="application/x-protostream"/>
         </distributed-cache>
     </cache-container>
 
