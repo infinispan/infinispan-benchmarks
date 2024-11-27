@@ -10,12 +10,16 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 @State(Scope.Benchmark)
 public class AddressState {
    private Address address;
    private byte[] addressBytes;
 
    private List<Address> addressesForUser;
+   private ByteBuf addressByteBuf;
 
    @Setup
    public void setup(ContextState contextState) throws IOException {
@@ -28,6 +32,7 @@ public class AddressState {
       addressesForUser.add(new Address("Out of street", "3333-111", 1, true));
 
       addressBytes = ProtobufUtil.toWrappedByteArray(contextState.getCtx(), address);
+      addressByteBuf = Unpooled.wrappedBuffer(addressBytes);
    }
 
    public Address getAddress() {
@@ -40,5 +45,9 @@ public class AddressState {
 
    public List<Address> getAddressesForUser() {
       return addressesForUser;
+   }
+
+   public ByteBuf getAddressByteBuf() {
+      return addressByteBuf.slice();
    }
 }

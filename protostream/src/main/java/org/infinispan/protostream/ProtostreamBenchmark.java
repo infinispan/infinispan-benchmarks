@@ -23,6 +23,9 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 10)
@@ -31,75 +34,96 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Benchmark)
 public class ProtostreamBenchmark {
 
-   @Param({"true", "false"})
-   boolean byteArrayOrStream;
+   @Param
+   SerializationType serializationType;
 
    @Benchmark
    public Object testMarshallAddress(ContextState contextState, AddressState addressState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       Address address = addressState.getAddress();
-      if (byteArrayOrStream)
-         return ProtobufUtil.toWrappedByteArray(ctx, address);
-      else {
-         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(addressState.getAddressBytes().length);
-         ProtobufUtil.toWrappedStream(ctx, os, address);
-         return os.getByteBuffer();
-      }
+      return switch (serializationType) {
+         case ARRAY -> ProtobufUtil.toWrappedByteArray(ctx, address);
+         case INPUT_STREAM -> {
+            ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(addressState.getAddressBytes().length);
+            ProtobufUtil.toWrappedStream(ctx, os, address);
+            yield os.getByteBuffer();
+         }
+         case BYTE_BUF -> {
+            ByteBuf buf = ByteBufAllocator.DEFAULT.buffer(addressState.getAddressBytes().length);
+            ProtobufUtil.toWrappedEncoder(ctx, new ByteBufEncoder(buf), address);
+            yield buf.release();
+         }
+      };
    }
 
    @Benchmark
    public Object testMarshallUser(ContextState contextState, UserState userState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       User user = userState.getUser();
-      if (byteArrayOrStream)
-         return ProtobufUtil.toWrappedByteArray(ctx, user);
-      else {
-         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(userState.getUserBytes().length);
-         ProtobufUtil.toWrappedStream(ctx, os, user);
-         return os.getByteBuffer();
-      }
+      return switch (serializationType) {
+         case ARRAY -> ProtobufUtil.toWrappedByteArray(ctx, user);
+         case INPUT_STREAM -> {
+            ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(userState.getUserBytes().length);
+            ProtobufUtil.toWrappedStream(ctx, os, user);
+            yield os.getByteBuffer();
+         }
+         case BYTE_BUF -> {
+            ByteBuf buf = ByteBufAllocator.DEFAULT.buffer(userState.getUserBytes().length);
+            ProtobufUtil.toWrappedEncoder(ctx, new ByteBufEncoder(buf), user);
+            yield buf.release();
+         }
+      };
    }
 
    @Benchmark
    public Object testMarshallIracMetadata(ContextState contextState, MetadataState metadataState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       IracMetadata metadata = metadataState.getMetadata();
-      if (byteArrayOrStream)
-         return ProtobufUtil.toWrappedByteArray(ctx, metadata);
-      else {
-         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(metadataState.getMetadataBytes().length);
-         ProtobufUtil.toWrappedStream(ctx, os, metadata);
-         return os.getByteBuffer();
-      }
+      return switch (serializationType) {
+         case ARRAY -> ProtobufUtil.toWrappedByteArray(ctx, metadata);
+         case INPUT_STREAM -> {
+            ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(metadataState.getMetadataBytes().length);
+            ProtobufUtil.toWrappedStream(ctx, os, metadata);
+            yield os.getByteBuffer();
+         }
+         case BYTE_BUF -> {
+            ByteBuf buf = ByteBufAllocator.DEFAULT.buffer(metadataState.getMetadataBytes().length);
+            ProtobufUtil.toWrappedEncoder(ctx, new ByteBufEncoder(buf), metadata);
+            yield buf.release();
+         }
+      };
    }
 
    @Benchmark
    public Address testUnmarshallAddress(ContextState contextState, AddressState addressState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       byte[] addressBytes = addressState.getAddressBytes();
-      if (byteArrayOrStream)
-         return ProtobufUtil.fromWrappedByteArray(ctx, addressBytes);
-      else
-         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(addressBytes));
+      return switch (serializationType) {
+         case ARRAY -> ProtobufUtil.fromWrappedByteArray(ctx, addressBytes);
+         case INPUT_STREAM -> ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(addressBytes));
+         case BYTE_BUF -> ProtobufUtil.fromWrappedDecoder(ctx, new ByteBufDecoder(addressState.getAddressByteBuf()));
+      };
    }
 
    @Benchmark
    public User testUnmarshallUser(ContextState contextState, UserState userState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       byte[] userBytes = userState.getUserBytes();
-      if (byteArrayOrStream)
-         return ProtobufUtil.fromWrappedByteArray(ctx, userBytes);
-      else
-         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(userBytes));
+      return switch (serializationType) {
+         case ARRAY -> ProtobufUtil.fromWrappedByteArray(ctx, userBytes);
+         case INPUT_STREAM -> ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(userBytes));
+         case BYTE_BUF -> ProtobufUtil.fromWrappedDecoder(ctx, new ByteBufDecoder(userState.getUserByteBuf()));
+      };
    }
 
    @Benchmark
    public IracMetadata testUnmarshallMetadata(ContextState contextState, MetadataState metadataState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       byte[] metadataBytes = metadataState.getMetadataBytes();
-      if (byteArrayOrStream)
-         return ProtobufUtil.fromWrappedByteArray(ctx, metadataBytes);
-      else
-         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(metadataBytes));
+      return switch (serializationType) {
+         case ARRAY -> ProtobufUtil.fromWrappedByteArray(ctx, metadataBytes);
+         case INPUT_STREAM -> ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(metadataBytes));
+         case BYTE_BUF -> ProtobufUtil.fromWrappedDecoder(ctx, new ByteBufDecoder(metadataState.getMetadataByteBuf()));
+      };
    }
 }
