@@ -4,7 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.protostream.impl.ByteArrayOutputStreamEx;
+import org.infinispan.protostream.impl.RandomAccessOutputStreamImpl;
+import org.infinispan.protostream.impl.TagWriterImpl;
 import org.infinispan.protostream.state.AddressState;
 import org.infinispan.protostream.state.ContextState;
 import org.infinispan.protostream.state.MetadataState;
@@ -35,42 +36,69 @@ public class ProtostreamBenchmark {
    boolean byteArrayOrStream;
 
    @Benchmark
-   public Object testMarshallAddress(ContextState contextState, AddressState addressState) throws IOException {
+   public Object testSizedAddress(ContextState contextState, AddressState addressState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       Address address = addressState.getAddress();
-      if (byteArrayOrStream)
-         return ProtobufUtil.toWrappedByteArray(ctx, address);
-      else {
-         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(addressState.getAddressBytes().length);
-         ProtobufUtil.toWrappedStream(ctx, os, address);
-         return os.getByteBuffer();
+      TagWriterImpl sizedWriter = TagWriterImpl.newInstance(ctx);
+      WrappedMessage.write(ctx, sizedWriter, address);
+      return sizedWriter;
+   }
+
+   @Benchmark
+   public Object testMarshallAddress(ContextState contextState, AddressState addressState) throws IOException {
+      RandomAccessOutputStreamImpl raos = contextState.getOutputStream();
+      SerializationContext ctx = contextState.getCtx();
+      Address address = addressState.getAddress();
+      if (byteArrayOrStream) {
+         raos.write(ProtobufUtil.toWrappedByteArray(ctx, address));
+      } else {
+         ProtobufUtil.toWrappedStream(ctx, (RandomAccessOutputStream) raos, address);
       }
+      return raos;
+   }
+
+   @Benchmark
+   public Object testSizedUser(ContextState contextState, UserState userState) throws IOException {
+      SerializationContext ctx = contextState.getCtx();
+      User user = userState.getUser();
+      TagWriterImpl sizedWriter = TagWriterImpl.newInstance(ctx);
+      WrappedMessage.write(ctx, sizedWriter, user);
+      return sizedWriter;
    }
 
    @Benchmark
    public Object testMarshallUser(ContextState contextState, UserState userState) throws IOException {
+      RandomAccessOutputStreamImpl raos = contextState.getOutputStream();
       SerializationContext ctx = contextState.getCtx();
       User user = userState.getUser();
-      if (byteArrayOrStream)
-         return ProtobufUtil.toWrappedByteArray(ctx, user);
-      else {
-         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(userState.getUserBytes().length);
-         ProtobufUtil.toWrappedStream(ctx, os, user);
-         return os.getByteBuffer();
+      if (byteArrayOrStream) {
+         raos.write(ProtobufUtil.toWrappedByteArray(ctx, user));
+      } else {
+         ProtobufUtil.toWrappedStream(ctx, (RandomAccessOutputStream) raos, user);
       }
+      return raos;
+   }
+
+   @Benchmark
+   public Object testSizedIracMetadata(ContextState contextState, MetadataState metadataState) throws IOException {
+      SerializationContext ctx = contextState.getCtx();
+      IracMetadata metadata = metadataState.getMetadata();
+      TagWriterImpl sizedWriter = TagWriterImpl.newInstance(ctx);
+      WrappedMessage.write(ctx, sizedWriter, metadata);
+      return sizedWriter;
    }
 
    @Benchmark
    public Object testMarshallIracMetadata(ContextState contextState, MetadataState metadataState) throws IOException {
+      RandomAccessOutputStreamImpl raos = contextState.getOutputStream();
       SerializationContext ctx = contextState.getCtx();
       IracMetadata metadata = metadataState.getMetadata();
-      if (byteArrayOrStream)
-         return ProtobufUtil.toWrappedByteArray(ctx, metadata);
-      else {
-         ByteArrayOutputStreamEx os = new ByteArrayOutputStreamEx(metadataState.getMetadataBytes().length);
-         ProtobufUtil.toWrappedStream(ctx, os, metadata);
-         return os.getByteBuffer();
+      if (byteArrayOrStream) {
+         raos.write(ProtobufUtil.toWrappedByteArray(ctx, metadata));
+      } else {
+         ProtobufUtil.toWrappedStream(ctx, (RandomAccessOutputStream) raos, metadata);
       }
+      return raos;
    }
 
    @Benchmark
