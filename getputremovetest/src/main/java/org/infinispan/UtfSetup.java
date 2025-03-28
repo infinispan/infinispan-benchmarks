@@ -1,8 +1,8 @@
 package org.infinispan;
 
-import java.io.DataOutput;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.infinispan.protostream.RandomAccessOutputStream;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -19,23 +19,25 @@ public class UtfSetup {
    @Param({"1", "8", "32", "128", "315", "518", "1285", "3218", "8321", "78832", "3213967"})
    int stringLength;
 
-   @Param({"new", "main"})
+   @Param({"main", "proto-ra"})
    String type;
 
    @Param({"true", "false"})
    boolean useMultiByte;
 
-   DataOutput dataOutput;
+   StringWriter strWriter;
    String string;
 
    @Setup
    public void setup() {
       switch (type) {
-         case "new":
-            dataOutput = new BytesObjectOutputNew(initialArraySize, initialPosition);
-            break;
          case "main":
-            dataOutput = new BytesObjectOutputMain(initialArraySize, initialPosition);
+            strWriter = new BytesObjectOutputMain(initialArraySize, initialPosition);
+            break;
+         case "proto-ra":
+            RandomAccessOutputStream out = new org.infinispan.protostream.impl.RandomAccessOutputStreamImpl(initialArraySize);
+            out.setPosition(initialPosition);
+            strWriter = new TagWriter(out);
             break;
          default:
             throw new IllegalStateException();
@@ -54,13 +56,13 @@ public class UtfSetup {
 
    public void reset() {
       switch (type) {
-         case "new":
-            assert useMultiByte || ((BytesObjectOutputNew) dataOutput).pos == initialPosition + stringLength;
-            ((BytesObjectOutputNew) dataOutput).pos = initialPosition;
-            break;
          case "main":
-            assert useMultiByte || ((BytesObjectOutputMain) dataOutput).pos == initialPosition + stringLength;
-            ((BytesObjectOutputMain) dataOutput).pos = initialPosition;
+            assert useMultiByte || ((BytesObjectOutputMain) strWriter).pos == initialPosition + stringLength;
+            ((BytesObjectOutputMain) strWriter).pos = 0;
+            break;
+         case "proto-ra":
+            assert useMultiByte || ((TagWriter) strWriter).out.getPosition() == initialPosition + stringLength;
+            ((TagWriter) strWriter).out.setPosition(0);
             break;
          default:
             throw new IllegalStateException();
