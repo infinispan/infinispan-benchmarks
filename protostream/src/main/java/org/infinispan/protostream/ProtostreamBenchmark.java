@@ -1,14 +1,11 @@
 package org.infinispan.protostream;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
 import org.infinispan.protostream.impl.RandomAccessOutputStreamImpl;
 import org.infinispan.protostream.impl.TagWriterImpl;
 import org.infinispan.protostream.state.AddressState;
 import org.infinispan.protostream.state.ContextState;
 import org.infinispan.protostream.state.MetadataState;
+import org.infinispan.protostream.state.UUIDState;
 import org.infinispan.protostream.state.UserState;
 import org.infinispan.protostream.userclasses.Address;
 import org.infinispan.protostream.userclasses.IracMetadata;
@@ -23,6 +20,11 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -102,6 +104,29 @@ public class ProtostreamBenchmark {
    }
 
    @Benchmark
+   public Object testSizedUUID(ContextState contextState, UUIDState uuidState) throws IOException {
+      var ctx = contextState.getCtx();
+      var uuid = uuidState.getUuid();
+      var sizedWriter = TagWriterImpl.newInstance(ctx);
+      WrappedMessage.write(ctx, sizedWriter, uuid);
+      return sizedWriter;
+   }
+
+   @Benchmark
+   public Object testMarshallUUID(ContextState contextState, UUIDState uuidState) throws IOException {
+      var raos = contextState.getOutputStream();
+      var ctx = contextState.getCtx();
+      var data = uuidState.getUuid();
+      if (byteArrayOrStream) {
+         raos.write(ProtobufUtil.toWrappedByteArray(ctx, data));
+      } else {
+         ProtobufUtil.toWrappedStream(ctx, (RandomAccessOutputStream) raos, data);
+      }
+      return raos;
+   }
+
+
+   @Benchmark
    public Address testUnmarshallAddress(ContextState contextState, AddressState addressState) throws IOException {
       SerializationContext ctx = contextState.getCtx();
       byte[] addressBytes = addressState.getAddressBytes();
@@ -129,5 +154,15 @@ public class ProtostreamBenchmark {
          return ProtobufUtil.fromWrappedByteArray(ctx, metadataBytes);
       else
          return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(metadataBytes));
+   }
+
+   @Benchmark
+   public UUID testUnmarshallUUID(ContextState contextState, UUIDState uuidState) throws IOException {
+      var ctx = contextState.getCtx();
+      var bytes = uuidState.getUuidBytes();
+      if (byteArrayOrStream)
+         return ProtobufUtil.fromWrappedByteArray(ctx, bytes);
+      else
+         return ProtobufUtil.fromWrappedStream(ctx, new ByteArrayInputStream(bytes));
    }
 }
