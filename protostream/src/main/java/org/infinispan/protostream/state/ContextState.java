@@ -1,17 +1,15 @@
 package org.infinispan.protostream.state;
 
-import static org.infinispan.protostream.userclasses.BenchmarkSerializationContextInitializer.INSTANCE;
-
-import java.io.OutputStream;
-
 import org.infinispan.protostream.ProtobufUtil;
-import org.infinispan.protostream.RandomAccessOutputStream;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.impl.RandomAccessOutputStreamImpl;
-import org.openjdk.jmh.annotations.Level;
+import org.infinispan.protostream.types.java.CommonTypesSchema;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+
+import static org.infinispan.protostream.userclasses.BenchmarkSerializationContextInitializer.INSTANCE;
 
 @State(Scope.Benchmark)
 public class ContextState {
@@ -21,8 +19,14 @@ public class ContextState {
    @Setup
    public void setup() {
       ctx = ProtobufUtil.newSerializationContext();
-      INSTANCE.registerSchema(ctx);
-      INSTANCE.registerMarshallers(ctx);
+      register(INSTANCE);
+      register(new CommonTypesSchema());
+      os = new RandomAccessOutputStreamImpl();
+   }
+
+   private void register(SerializationContextInitializer serializationContextInitializer) {
+      serializationContextInitializer.registerSchema(ctx);
+      serializationContextInitializer.registerMarshallers(ctx);
 
       os = new RandomAccessOutputStreamImpl();
    }
