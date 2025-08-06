@@ -1,4 +1,4 @@
-package org.infinispan;
+package org.infinispan.protostream.utf;
 
 import java.io.IOException;
 
@@ -14,7 +14,7 @@ public class TagWriter implements StringWriter {
    TagWriterImpl writer;
    RandomAccessOutputStream out;
 
-   TagWriter(RandomAccessOutputStream out) {
+   public TagWriter(RandomAccessOutputStream out) {
       this.out = out;
       this.writer = TagWriterImpl.newInstance(SERIALIZATION_CONTEXT, out);
    }
