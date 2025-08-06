@@ -1,9 +1,6 @@
-package org.infinispan;
+package org.infinispan.protostream.utf;
 
 import java.io.ObjectOutput;
-
-import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.io.ByteBufferImpl;
 
 /**
  * Array backed, expandable {@link ObjectOutput} implementation.
@@ -13,7 +10,7 @@ final class BytesObjectOutputMain implements ObjectOutput, StringWriter {
    byte bytes[];
    int pos;
 
-   BytesObjectOutputMain(int size, int pos) {
+   public BytesObjectOutputMain(int size, int pos) {
       this.bytes = new byte[size];
       this.pos = pos;
    }
@@ -259,10 +256,4 @@ final class BytesObjectOutputMain implements ObjectOutput, StringWriter {
       pos = 0;
       return b;
    }
-
-   ByteBuffer toByteBuffer() {
-      // No triming, just take position as length
-      return ByteBufferImpl.create(bytes, 0, pos);
-   }
-
 }

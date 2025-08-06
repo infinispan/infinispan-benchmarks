@@ -1,4 +1,4 @@
-package org.infinispan;
+package org.infinispan.protostream.utf;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

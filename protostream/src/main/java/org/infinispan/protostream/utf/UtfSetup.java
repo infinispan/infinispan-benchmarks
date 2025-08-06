@@ -1,4 +1,4 @@
-package org.infinispan;
+package org.infinispan.protostream.utf;
 
 import java.util.concurrent.ThreadLocalRandom;
 
