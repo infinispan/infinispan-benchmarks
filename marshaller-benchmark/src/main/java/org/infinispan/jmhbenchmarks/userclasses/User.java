@@ -1,4 +1,4 @@
-package org.infinispan.protostream.userclasses;
+package org.infinispan.jmhbenchmarks.userclasses;
 
 import java.time.Instant;
 import java.util.ArrayList;
