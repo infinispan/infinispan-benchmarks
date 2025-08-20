@@ -1,4 +1,4 @@
-package org.infinispan.protostream.userclasses;
+package org.infinispan.jmhbenchmarks.userclasses;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class User {
       this.encryptedAcountInfo = encryptedAcountInfo;
    }
 
-   @ProtoField(value = 1, required = true)
+   @ProtoField(value = 1, defaultValue = "0")
    public int getId() {
       return id;
    }

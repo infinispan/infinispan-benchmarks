@@ -1,4 +1,4 @@
-package org.infinispan.protostream.userclasses;
+package org.infinispan.jmhbenchmarks.userclasses;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ public class IracEntryVersion {
       return Arrays.asList(vectorClock);
    }
 
-   @ProtoTypeId(5)
+   @ProtoTypeId(800005)
    public static class MapEntry implements Comparable<MapEntry> {
 
       final String site;
