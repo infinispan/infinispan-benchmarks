@@ -1,5 +1,10 @@
 package org.infinispan.protostream;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.infinispan.protostream.impl.RandomAccessOutputStreamImpl;
 import org.infinispan.protostream.impl.TagWriterImpl;
 import org.infinispan.protostream.state.AddressState;
@@ -21,11 +26,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 10)
@@ -42,6 +42,15 @@ public class ProtostreamBenchmark {
       SerializationContext ctx = contextState.getCtx();
       Address address = addressState.getAddress();
       TagWriterImpl sizedWriter = TagWriterImpl.newInstance(ctx);
+      WrappedMessage.write(ctx, sizedWriter, address);
+      return sizedWriter;
+   }
+
+   @Benchmark
+   public Object testSizeEstimateAddress(ContextState contextState, AddressState addressState) throws IOException {
+      SerializationContext ctx = contextState.getCtx();
+      Address address = addressState.getAddress();
+      TagWriterImpl sizedWriter = TagWriterImpl.newInstanceSizeEstimate(ctx);
       WrappedMessage.write(ctx, sizedWriter, address);
       return sizedWriter;
    }
@@ -69,6 +78,15 @@ public class ProtostreamBenchmark {
    }
 
    @Benchmark
+   public Object testSizeEstimateUser(ContextState contextState, UserState userState) throws IOException {
+      SerializationContext ctx = contextState.getCtx();
+      User user = userState.getUser();
+      TagWriterImpl sizedWriter = TagWriterImpl.newInstanceSizeEstimate(ctx);
+      WrappedMessage.write(ctx, sizedWriter, user);
+      return sizedWriter;
+   }
+
+   @Benchmark
    public Object testMarshallUser(ContextState contextState, UserState userState) throws IOException {
       RandomAccessOutputStreamImpl raos = contextState.getOutputStream();
       SerializationContext ctx = contextState.getCtx();
@@ -91,6 +109,15 @@ public class ProtostreamBenchmark {
    }
 
    @Benchmark
+   public Object testSizeEstimateIracMetadata(ContextState contextState, MetadataState metadataState) throws IOException {
+      SerializationContext ctx = contextState.getCtx();
+      IracMetadata metadata = metadataState.getMetadata();
+      TagWriterImpl sizedWriter = TagWriterImpl.newInstanceSizeEstimate(ctx);
+      WrappedMessage.write(ctx, sizedWriter, metadata);
+      return sizedWriter;
+   }
+
+   @Benchmark
    public Object testMarshallIracMetadata(ContextState contextState, MetadataState metadataState) throws IOException {
       RandomAccessOutputStreamImpl raos = contextState.getOutputStream();
       SerializationContext ctx = contextState.getCtx();
@@ -108,6 +135,15 @@ public class ProtostreamBenchmark {
       var ctx = contextState.getCtx();
       var uuid = uuidState.getUuid();
       var sizedWriter = TagWriterImpl.newInstance(ctx);
+      WrappedMessage.write(ctx, sizedWriter, uuid);
+      return sizedWriter;
+   }
+
+   @Benchmark
+   public Object testSizeEstimateUUID(ContextState contextState, UUIDState uuidState) throws IOException {
+      var ctx = contextState.getCtx();
+      var uuid = uuidState.getUuid();
+      var sizedWriter = TagWriterImpl.newInstanceSizeEstimate(ctx);
       WrappedMessage.write(ctx, sizedWriter, uuid);
       return sizedWriter;
    }
