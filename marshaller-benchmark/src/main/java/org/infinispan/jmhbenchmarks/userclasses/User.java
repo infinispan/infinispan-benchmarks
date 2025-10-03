@@ -1,5 +1,6 @@
 package org.infinispan.jmhbenchmarks.userclasses;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,9 +15,9 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
 @ProtoTypeId(800001)
-public class User {
+public class User implements Serializable {
 
-   public enum Gender {
+   public enum Gender implements Serializable {
       @ProtoEnumValue(1)
       MALE,
       @ProtoEnumValue(2)

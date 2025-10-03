@@ -15,6 +15,7 @@ import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.runner.BenchmarkException;
 
 @State(Scope.Thread)
 @Fork(1)
@@ -34,39 +35,40 @@ public class MarshallerBenchmark {
         return holder.getMarshaller().objectFromByteBuffer(userState.getUserBytes());
     }
 
-    @Benchmark
-    public byte[] testPutKeyValueCommandToByteBuffer(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
-        return holder.getMarshaller().objectToByteBuffer(putKeyValueCommandState.getPutKeyValueCommand());
-    }
+//    @Benchmark
+//    public byte[] testPutKeyValueCommandToByteBuffer(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
+//        return holder.getMarshaller().objectToByteBuffer(putKeyValueCommandState.getPutKeyValueCommand());
+//    }
 
-    @Benchmark
-    public Object testPutKeyValueCommandFromByteBuffer(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
-        return holder.getMarshaller().objectFromByteBuffer(putKeyValueCommandState.getPutKeyValueCommandBytes());
-    }
+//    @Benchmark
+//    public Object testPutKeyValueCommandFromByteBuffer(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
+//        return holder.getMarshaller().objectFromByteBuffer(putKeyValueCommandState.getPutKeyValueCommandBytes());
+//    }
 
-   @Benchmark
-   public Object testUserFromStream(InfinispanHolder holder, UserState userState) throws Exception {
-      ResettableInputStream ris = userState.getUserStream();
-      return holder.getStreamAwareMarshaller().readObject(userState.getUserStream(), ris.length());
-   }
+//   @Benchmark
+//   public Object testUserFromStream(InfinispanHolder holder, UserState userState) throws Exception {
+//      ResettableInputStream ris = userState.getUserStream();
+//      return holder.getStreamAwareMarshaller().readObject(userState.getUserStream(), ris.length());
+//   }
 
-   @Benchmark
-   public Object testPutKeyValueCommandFromStream(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
-      ResettableInputStream ris = putKeyValueCommandState.getPutKeyValuecommandStream();
-      return holder.getStreamAwareMarshaller().readObject(ris, ris.length());
-   }
+//   @Benchmark
+//   public Object testPutKeyValueCommandFromStream(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
+//      ResettableInputStream ris = putKeyValueCommandState.getPutKeyValuecommandStream();
+//      return holder.getStreamAwareMarshaller().readObject(ris, ris.length());
+//   }
 
-   @Benchmark
-   public Object testPutKeyValueCommandFromStreamOld(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
-      return holder.getStreamAwareMarshaller().readObject(putKeyValueCommandState.getPutKeyValuecommandStream());
-   }
+//   @Benchmark
+//   public Object testPutKeyValueCommandFromStreamOld(InfinispanHolder holder, PutKeyValueCommandState putKeyValueCommandState) throws Exception {
+//      return holder.getStreamAwareMarshaller().readObject(putKeyValueCommandState.getPutKeyValuecommandStream());
+//   }
 
     public static void main(String[] args) throws Exception {
        // Force the main method to not have forks so we can remotely debug
        args = Arrays.copyOf(args, args.length + 1);
        args[args.length - 1] = "-f0";
-       args = Arrays.copyOf(args, args.length + 1);
-       args[args.length - 1] = "-puseUserObjectValue=true";
+       args = Arrays.copyOf(args, args.length + 2);
+       args[args.length - 2] = "-puseUserObjectValue=true";
+       args[args.length - 1] = "-pmarshallerType=protostream";
        org.openjdk.jmh.Main.main(args);
     }
 }

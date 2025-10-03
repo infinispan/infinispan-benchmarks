@@ -1,5 +1,6 @@
 package org.infinispan.jmhbenchmarks.userclasses;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -7,7 +8,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
 @ProtoTypeId(800000)
-public class Address {
+public class Address implements Serializable {
 
    private String street;
    private String postCode;
