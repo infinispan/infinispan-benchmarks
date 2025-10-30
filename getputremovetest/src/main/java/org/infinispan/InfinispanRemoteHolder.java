@@ -71,6 +71,11 @@ public class InfinispanRemoteHolder {
          System.out.printf("Started server %d\n", hotRodServerConfiguration.port());
       }
 
+      // Start all the servers at the end
+      for (int i = 0; i < nodes; ++i) {
+         servers[i].postStart();
+      }
+
       ConfigurationBuilder remoteCacheConfigurationBuilder = new ConfigurationBuilder();
       // Including server automatically enables this
       if (!enableTelemetry) {
@@ -82,11 +87,6 @@ public class InfinispanRemoteHolder {
       for (int i = 0; i < remoteClients; ++i) {
          remotes[i] = new RemoteCacheManager(remoteCacheConfigurationBuilder.build());
          caches[i] = remotes[i].getCache();
-      }
-
-      // Start all the servers at the end
-      for (int i = 0; i < nodes; ++i) {
-         servers[i].postStart();
       }
    }
 

@@ -25,6 +25,14 @@ import org.openjdk.jmh.infra.Blackhole;
 public class JMHBenchmarks {
 
 	@Benchmark
+	public void infinispanIsolatedRemotePut(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
+		Object key = kg.getNextKey();
+		Object value = kg.getNextValue();
+		RemoteCache cache = ih.getCache();
+		bh.consume( cache.put( key, value ) );
+	}
+
+	@Benchmark
 	@GroupThreads(2)
 	@Group("getPutHotRod")
 	public void infinispanRemoteRemove(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
