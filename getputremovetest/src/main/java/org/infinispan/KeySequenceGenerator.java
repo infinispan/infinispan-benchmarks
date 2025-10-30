@@ -24,13 +24,17 @@ import org.openjdk.jmh.annotations.State;
 public class KeySequenceGenerator {
 
 	private static final int randomSeed = 17;
-	public static final int keySpaceSize = 1000;
-	private static final int keyObjectSize = 10;
-	private static final int valueSpaceSize = 100;
-	private static final int valueObjectSize = 1000;
+	public static final int keySpaceSize = 10_000;
+	private static final int valueSpaceSize = 1_000;
 
 	@Param({"true","false"})
 	private boolean useStrings;
+
+	@Param({"10", "100"})
+	private int keyObjectSize;
+
+	@Param({"10", "1000", "40000"})
+	private int valueObjectSize;
 
 	private RandomSequence keySequence;
 	private RandomSequence valueSequence;
