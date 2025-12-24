@@ -3,6 +3,7 @@ package org.infinispan.protostream.utf;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.infinispan.protostream.RandomAccessOutputStream;
+import org.infinispan.protostream.impl.RandomAccessOutputStreamImpl;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -22,11 +23,28 @@ public class UtfSetup {
    @Param({"main", "proto-ra"})
    String type;
 
-   @Param({"true", "false"})
-   boolean useMultiByte;
+   @Param({"NONE", "ALL", "PARTIAL"})
+   MultiByteType useMultiByte;
 
+   byte[] initialArray;
    StringWriter strWriter;
    String string;
+
+   public enum MultiByteType {
+      NONE,
+      ALL,
+      PARTIAL
+   }
+
+   protected class MyRandomAccessOutputStreamImpl extends RandomAccessOutputStreamImpl {
+      public MyRandomAccessOutputStreamImpl(int initialArraySize) {
+         super(initialArraySize);
+      }
+
+      void setArray(byte[] array) {
+         this.buf = array;
+      }
+   }
 
    @Setup
    public void setup() {
@@ -35,7 +53,8 @@ public class UtfSetup {
             strWriter = new BytesObjectOutputMain(initialArraySize, initialPosition);
             break;
          case "proto-ra":
-            RandomAccessOutputStream out = new org.infinispan.protostream.impl.RandomAccessOutputStreamImpl(initialArraySize);
+            initialArray = new byte[initialArraySize];
+            RandomAccessOutputStream out = new MyRandomAccessOutputStreamImpl(initialArraySize);
             out.setPosition(initialPosition);
             strWriter = new TagWriter(out);
             break;
@@ -45,10 +64,17 @@ public class UtfSetup {
 
       StringBuilder stringBuilder = new StringBuilder(stringLength);
       for (int i = 0; i < stringLength; ++i) {
-         if (useMultiByte) {
-            stringBuilder.append(randomUtf8Characters.charAt(ThreadLocalRandom.current().nextInt(randomUtf8Characters.length())));
-         } else {
-            stringBuilder.append((char) ThreadLocalRandom.current().nextInt(128));
+         switch (useMultiByte) {
+            case ALL -> stringBuilder.append(randomUtf8Characters.charAt(ThreadLocalRandom.current().nextInt(randomUtf8Characters.length())));
+            case NONE -> stringBuilder.append((char) ThreadLocalRandom.current().nextInt(128));
+            case PARTIAL -> {
+               int value = ThreadLocalRandom.current().nextInt(160);
+               if (value > 127) {
+                  stringBuilder.append(randomUtf8Characters.charAt(ThreadLocalRandom.current().nextInt(randomUtf8Characters.length())));
+               } else {
+                  stringBuilder.append((char) value);
+               }
+            }
          }
       }
       string = stringBuilder.toString();
@@ -57,12 +83,13 @@ public class UtfSetup {
    public void reset() {
       switch (type) {
          case "main":
-            assert useMultiByte || ((BytesObjectOutputMain) strWriter).pos == initialPosition + stringLength;
+            assert useMultiByte != MultiByteType.NONE || ((BytesObjectOutputMain) strWriter).pos == initialPosition + stringLength;
             ((BytesObjectOutputMain) strWriter).pos = 0;
             break;
          case "proto-ra":
-            assert useMultiByte || ((TagWriter) strWriter).out.getPosition() == initialPosition + stringLength;
-            ((TagWriter) strWriter).out.setPosition(0);
+            assert useMultiByte != MultiByteType.NONE || ((TagWriter) strWriter).out.getPosition() == initialPosition + stringLength;
+            ((MyRandomAccessOutputStreamImpl) ((TagWriter) strWriter).out).setArray(initialArray);
+            ((TagWriter) strWriter).out.reset();
             break;
          default:
             throw new IllegalStateException();

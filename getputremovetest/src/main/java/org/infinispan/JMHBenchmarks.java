@@ -33,6 +33,13 @@ public class JMHBenchmarks {
 	}
 
 	@Benchmark
+	public void infinispanIsolatedRemoteGet(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {
+		Object key = kg.getNextKey();
+		RemoteCache cache = ih.getCache();
+		bh.consume( cache.get( key ) );
+	}
+
+	@Benchmark
 	@GroupThreads(2)
 	@Group("getPutHotRod")
 	public void infinispanRemoteRemove(InfinispanRemoteHolder ih, Blackhole bh, KeySequenceGenerator kg) {

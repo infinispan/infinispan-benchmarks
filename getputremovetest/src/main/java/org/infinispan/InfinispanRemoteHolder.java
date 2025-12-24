@@ -50,8 +50,11 @@ public class InfinispanRemoteHolder {
    @Param("false")
    private boolean enableTelemetry;
 
+   @Param("false")
+   private boolean insertEntries;
+
    @Setup
-   public void initializeState() throws IOException {
+   public void initializeState(KeySequenceGenerator generator) throws IOException {
       mgrs = new DefaultCacheManager[nodes];
       servers = new HotRodServer[nodes];
       remotes = new RemoteCacheManager[remoteClients];
@@ -87,6 +90,12 @@ public class InfinispanRemoteHolder {
       for (int i = 0; i < remoteClients; ++i) {
          remotes[i] = new RemoteCacheManager(remoteCacheConfigurationBuilder.build());
          caches[i] = remotes[i].getCache();
+      }
+
+      if (insertEntries) {
+         for (int i = 0; i < KeySequenceGenerator.keySpaceSize; ++i) {
+            ((RemoteCache) caches[0]).put(generator.getNextKey(), generator.getNextValue());
+         }
       }
    }
 
