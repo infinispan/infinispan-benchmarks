@@ -21,8 +21,8 @@
       <javac.target>11</javac.target>
 
       <uberjar.name>benchmarks</uberjar.name>
-      <infinispan.version>15.0.0-SNAPSHOT</infinispan.version>
-      <version.netty>4.1.91.Final</version.netty>
+      <infinispan.version>15.0.0.Final</infinispan.version>
+      <version.netty>4.1.109.Final</version.netty>
    </properties>
 
    <dependencies>
