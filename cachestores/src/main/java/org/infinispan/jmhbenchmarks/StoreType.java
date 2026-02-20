@@ -5,12 +5,8 @@ import java.io.File;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.AbstractStoreConfigurationBuilder;
 import org.infinispan.configuration.cache.PersistenceConfigurationBuilder;
-import org.infinispan.configuration.cache.SingleFileStoreConfiguration;
-import org.infinispan.configuration.cache.StoreConfiguration;
-import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfiguration;
+import org.infinispan.persistence.file.SingleFileStoreConfigurationBuilder;
 import org.infinispan.persistence.rocksdb.configuration.RocksDBStoreConfigurationBuilder;
-import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfiguration;
-import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
 
 /**
  * @author wburns
@@ -20,7 +16,7 @@ public enum StoreType {
    SINGLE {
       @Override
       AbstractStoreConfigurationBuilder apply(PersistenceConfigurationBuilder builder) {
-         return builder.addSingleFileStore().location(dataRoot + "SFS");
+         return builder.addStore(SingleFileStoreConfigurationBuilder.class).location(dataRoot + "SFS");
       }
 
       @Override
@@ -31,7 +27,7 @@ public enum StoreType {
    SOFT_INDEX {
       @Override
       AbstractStoreConfigurationBuilder apply(PersistenceConfigurationBuilder builder) {
-         return builder.addStore(SoftIndexFileStoreConfigurationBuilder.class)
+         return builder.addSoftIndexFileStore()
                .dataLocation(dataRoot + "SIFS/data")
                .indexLocation(dataRoot + "SIFS/index");
       }

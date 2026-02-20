@@ -15,15 +15,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jmh.version>1.20</jmh.version>
-        <javac.target>1.8</javac.target>
+        <jmh.version>1.37</jmh.version>
+        <javac.target>25</javac.target>
         <uberjar.name>benchmarks</uberjar.name>
         <!--
         <infinispan.version>12.1.0.Dev01</infinispan.version>
         <protostream.version>4.4.0.Alpha4</protostream.version>
         -->
-        <infinispan.version>12.1.0-SNAPSHOT</infinispan.version>
-        <protostream.version>4.4.0.Alpha7</protostream.version>
+        <infinispan.version>16.2.0-SNAPSHOT</infinispan.version>
+        <protostream.version>6.0.4</protostream.version>
     </properties>
 
     <dependencies>
@@ -46,11 +46,6 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-rocksdb</artifactId>
-            <version>${infinispan.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-persistence-soft-index</artifactId>
             <version>${infinispan.version}</version>
         </dependency>
   <dependency>
@@ -77,11 +72,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.8.1</version>
                 <configuration>
                     <compilerVersion>${javac.target}</compilerVersion>
                     <source>${javac.target}</source>
                     <target>${javac.target}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.infinispan.protostream</groupId>
+                            <artifactId>protostream-processor</artifactId>
+                            <version>${protostream.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.openjdk.jmh</groupId>
+                            <artifactId>jmh-generator-annprocess</artifactId>
+                            <version>${jmh.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

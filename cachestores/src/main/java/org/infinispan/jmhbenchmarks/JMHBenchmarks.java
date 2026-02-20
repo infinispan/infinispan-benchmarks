@@ -1,17 +1,15 @@
 package org.infinispan.jmhbenchmarks;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Predicate;
 
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.NonBlockingStore;
 import org.infinispan.persistence.support.SegmentPublisherWrapper;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
-import org.infinispan.util.concurrent.CompletionStages;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -34,6 +32,11 @@ public class JMHBenchmarks {
 	private static MarshallableEntry<?, ?> newEntry(Marshaller marshaller, KeySequenceGenerator generator) {
 		InternalCacheEntry ice = TestInternalCacheEntryFactory.create(generator.getNextKey(), generator.getNextValue());
 		return MarshalledEntryUtil.create(ice, marshaller);
+	}
+
+	@Benchmark
+	public void testCacheWrite(InfinispanHolder holder, KeySequenceGenerator generator) {
+		holder.getCache().put(generator.getNextKey(), generator.getNextValue());
 	}
 
 	@Benchmark

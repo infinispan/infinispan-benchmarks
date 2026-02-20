@@ -1,30 +1,28 @@
 package org.infinispan.jmhbenchmarks;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.JavaSerializationMarshaller;
-import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.support.SegmentPublisherWrapper;
 import org.infinispan.persistence.support.WaitNonBlockingStore;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
-import org.infinispan.util.concurrent.CompletionStages;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -58,20 +56,23 @@ public class InfinispanHolder {
 	@Setup
 	public void initializeState(KeySequenceGenerator generator) throws IOException {
 		ConfigurationBuilder builder = new ConfigurationBuilder();
+		builder.encoding().mediaType(MediaType.APPLICATION_PROTOSTREAM);
 		storeType.apply(builder.persistence())
 				.segmented(segmented)
 				// Make sure runs between don't leak into each other
 				.purgeOnStartup(true);
+
+		long pid = ProcessHandle.current().pid();
 		GlobalConfigurationBuilder globalConfigurationBuilder = new GlobalConfigurationBuilder();
 		globalConfigurationBuilder.globalState()
 				.enable()
-				.persistentLocation(Paths.get(System.getProperty("java.io.tmpdir"), getClass().getName()).toString());
-		cacheManager = new DefaultCacheManager(globalConfigurationBuilder.nonClusteredDefault().defaultCacheName("default").build(),
-				builder.build());
-		cache = cacheManager.getCache();
+				.persistentLocation(Path.of("target", Long.toString(pid)).toAbsolutePath().toString());
+		cacheManager = new DefaultCacheManager(globalConfigurationBuilder.nonClusteredDefault().build());
+		cacheManager.createCache("default", builder.build());
+		cache = cacheManager.getCache("default");
 
 		marshaller = TestingUtil.extractPersistenceMarshaller(cacheManager);
-		store = TestingUtil.getFirstStore(cache);
+		store = TestingUtil.getFirstStoreWait(cache);
 		int segments = cache.getCacheConfiguration().clustering().hash().numSegments();
 		allSegments = IntSets.immutableRangeSet(segments);
 		halfSegments = IntSets.immutableRangeSet(segments / 2);
@@ -103,6 +104,10 @@ public class InfinispanHolder {
 
 	public WaitNonBlockingStore getStore() {
 		return store;
+	}
+
+	public Cache getCache() {
+		return cache;
 	}
 
 	public int getBatchSize() {
