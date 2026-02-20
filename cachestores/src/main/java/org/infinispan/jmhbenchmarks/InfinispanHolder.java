@@ -1,7 +1,7 @@
 package org.infinispan.jmhbenchmarks;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -61,10 +61,12 @@ public class InfinispanHolder {
 				.segmented(segmented)
 				// Make sure runs between don't leak into each other
 				.purgeOnStartup(true);
+
+		long pid = ProcessHandle.current().pid();
 		GlobalConfigurationBuilder globalConfigurationBuilder = new GlobalConfigurationBuilder();
 		globalConfigurationBuilder.globalState()
 				.enable()
-				.persistentLocation(Paths.get(System.getProperty("java.io.tmpdir"), getClass().getName()).toString());
+				.persistentLocation(Path.of("target", Long.toString(pid)).toAbsolutePath().toString());
 		cacheManager = new DefaultCacheManager(globalConfigurationBuilder.nonClusteredDefault().build());
 		cacheManager.createCache("default", builder.build());
 		cache = cacheManager.getCache("default");
