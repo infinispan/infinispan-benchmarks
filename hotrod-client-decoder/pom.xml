@@ -22,7 +22,7 @@
 
       <uberjar.name>benchmarks</uberjar.name>
       <infinispan.version>15.0.0-SNAPSHOT</infinispan.version>
-      <version.netty>4.1.91.Final</version.netty>
+      <version.netty>4.1.94.Final</version.netty>
    </properties>
 
    <dependencies>
