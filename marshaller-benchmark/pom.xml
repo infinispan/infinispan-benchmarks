@@ -12,7 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <jmh.version>1.35</jmh.version>
+        <jmh.version>1.37</jmh.version>
 
         <javac.target>21</javac.target>
 
@@ -34,8 +34,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <infinispan.version>16.0.0-SNAPSHOT</infinispan.version>
-                <protostream.version>6.0.0-SNAPSHOT</protostream.version>
+                <infinispan.version>16.4.0-SNAPSHOT</infinispan.version>
+                <protostream.version>6.0.12</protostream.version>
             </properties>
         </profile>
     </profiles>
@@ -83,6 +83,10 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-multimap</artifactId>
+        </dependency>
         
     </dependencies>
 
@@ -97,6 +101,20 @@
                     <compilerVersion>${javac.target}</compilerVersion>
                     <source>${javac.target}</source>
                     <target>${javac.target}</target>
+
+                    <annotationProcessorPaths>
+                        <annotationProcessorPath>
+                            <groupId>org.infinispan.protostream</groupId>
+                            <artifactId>protostream-processor</artifactId>
+                            <version>${protostream.version}</version>
+                        </annotationProcessorPath>
+
+                        <annotationProcessorPath>
+                            <groupId>org.openjdk.jmh</groupId>
+                            <artifactId>jmh-generator-annprocess</artifactId>
+                            <version>${jmh.version}</version>
+                        </annotationProcessorPath>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
