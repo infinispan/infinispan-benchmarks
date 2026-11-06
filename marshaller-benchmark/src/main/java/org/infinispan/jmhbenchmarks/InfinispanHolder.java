@@ -13,6 +13,7 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -24,6 +25,7 @@ public class InfinispanHolder {
     private EmbeddedCacheManager cacheManager;
     private Marshaller marshaller;
     private StreamAwareMarshaller streamAwareMarshaller;
+    private PersistenceMarshaller persistenceMarshaller;
 
     @Setup
     public void initializeState() {
@@ -50,6 +52,7 @@ public class InfinispanHolder {
             }
         }
         marshaller = componentRegistry.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+        persistenceMarshaller = componentRegistry.getComponent(PersistenceMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
         if (marshaller instanceof StreamAwareMarshaller sam) {
            streamAwareMarshaller = sam;
         }
@@ -66,5 +69,14 @@ public class InfinispanHolder {
 
    public StreamAwareMarshaller getStreamAwareMarshaller() {
       return streamAwareMarshaller;
+   }
+
+   /**
+    * Returns the marshaller that stores use to read and write entries.
+    *
+    * @return the persistence marshaller of the cache manager.
+    */
+   public PersistenceMarshaller getPersistenceMarshaller() {
+      return persistenceMarshaller;
    }
 }
